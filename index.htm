@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group 4 - Automation & Control (g4hcmutetdh)</title>
+    
+    <!-- Chart.js & Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- LIÊN KẾT FILE CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 1. HERO BAR -->
+    <header class="hero-bar-fullwidth">
+        <div class="hero-bar-inner">
+            <div class="header-left">
+                <div class="logo-group">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShBzNwXiR6P9DiAB4rbMAkRa5suN6IsiA6jSBxlsmgd4SEbtAIZ4pgvA7o&s=10" alt="HCMUTE Logo" class="logo-img">
+                </div>
+                <div class="title-group">
+                    <h1>Group 4 - Automation & Control <span class="domain-tag">g4hcmutetdh</span></h1>
+                    <p>Sensor & Facial Recognition Monitoring System</p>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div id="statusBadge" class="status-badge">
+                    <span class="dot"></span>
+                    <span id="statusText">Disconnected</span>
+                </div>
+                <button class="btn-connect" onclick="requestNewPort()">
+                    <i data-lucide="usb" style="width: 14px; height: 14px;"></i>
+                    <span id="btnConnectText">Connect USB</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. NAVIGATION BAR (LIQUID GLASS SLIDER) -->
+    <nav class="apple-nav-sticky">
+        <ul class="apple-nav-list" id="appleNavList">
+            <!-- Bong bóng kính trượt lỏng -->
+            <div class="nav-glider" id="navGlider"></div>
+
+            <li class="apple-nav-item">
+                <button class="nav-btn active" onclick="switchTab('tab-overview', this)">
+                    <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Overview
+                </button>
+            </li>
+            <li class="apple-nav-item">
+                <button class="nav-btn" onclick="switchTab('tab-sensors', this)">
+                    <i data-lucide="cpu" style="width: 16px; height: 16px;"></i> Sensors
+                </button>
+            </li>
+            <li class="apple-nav-item">
+                <button class="nav-btn" onclick="switchTab('tab-faceid', this)">
+                    <i data-lucide="scan-face" style="width: 16px; height: 16px;"></i> FaceID
+                </button>
+            </li>
+            <li class="apple-nav-item">
+                <button class="nav-btn" onclick="switchTab('tab-health', this)">
+                    <i data-lucide="heart-pulse" style="width: 16px; height: 16px;"></i> Health Check
+                </button>
+            </li>
+            <li class="apple-nav-item">
+                <button class="nav-btn" onclick="switchTab('tab-analyze', this)">
+                    <i data-lucide="line-chart" style="width: 16px; height: 16px;"></i> Analyze
+                </button>
+            </li>
+            <li class="apple-nav-item">
+                <button class="nav-btn" onclick="switchTab('tab-members', this)">
+                    <i data-lucide="users" style="width: 16px; height: 16px;"></i> Members
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <main>
+        <!-- TAB OVERVIEW -->
+        <div id="tab-overview" class="page-tab active-tab">
+            <section>
+                <div class="section-header">
+                    <h2><i data-lucide="activity"></i> Realtime Sensors</h2>
+                </div>
+                <div class="grid-5-cards">
+                    <div class="card-sm liquid-glass">
+                        <div class="card-sm-header"><span>System Time</span><i data-lucide="clock"></i></div>
+                        <div><div class="clock-time realtimeClock">00:00</div><div class="clock-date realtimeDate">Loading...</div></div>
+                    </div>
+                    <div class="card-sm liquid-glass">
+                        <div class="card-sm-header"><span>Temperature</span><i data-lucide="thermometer"></i></div>
+                        <div class="card-sm-body"><span class="card-sm-value valTemp">--</span><span class="card-sm-unit">°C</span></div>
+                    </div>
+                    <div class="card-sm liquid-glass">
+                        <div class="card-sm-header"><span>Humidity</span><i data-lucide="droplets"></i></div>
+                        <div class="card-sm-body"><span class="card-sm-value valHum">--</span><span class="card-sm-unit">%</span></div>
+                    </div>
+                    <div class="card-sm liquid-glass">
+                        <div class="card-sm-header"><span>Brightness</span><i data-lucide="sun"></i></div>
+                        <div class="card-sm-body"><span class="card-sm-value valLdr">--</span><span class="card-sm-unit">nits</span></div>
+                    </div>
+                    <div class="card-sm liquid-glass">
+                        <div class="card-sm-header"><span>Potentiometer</span><i data-lucide="sliders"></i></div>
+                        <div class="card-sm-body"><span class="card-sm-value valPot">--</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="section-header">
+                    <h2><i data-lucide="scan-face"></i> Facial Recognition System</h2>
+                </div>
+                <div class="husky-card-wrapper">
+                    <div class="card-husky liquid-glass huskyCard">
+                        <div class="husky-info">
+                            <h3>HuskyLens Recognition Status</h3>
+                            <div class="husky-name valHusky">Scanning...</div>
+                        </div>
+                        <div class="faceid-wrapper">
+                            <i data-lucide="scan-face" class="faceid-icon"></i>
+                            <i data-lucide="check-circle-2" class="checkmark-icon"></i>
+                        </div>
+                    </div>
+                    <div class="faceid-drop-tag nameDropTag">
+                        <i data-lucide="user-check"></i> <span class="valDetectedName">--</span>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="section-header">
+                    <h2><i data-lucide="heart-pulse"></i> Living Environment Assessment</h2>
+                </div>
+                <div class="grid-health">
+                    <div class="health-card liquid-glass">
+                        <div class="health-icon iconHealthTemp"><i data-lucide="thermometer"></i></div>
+                        <div class="health-content">
+                            <div class="health-title">Thermal Comfort</div>
+                            <div class="health-status statusHealthTemp">Analyzing...</div>
+                            <div class="health-desc descHealthTemp">Awaiting temperature sensor data...</div>
+                        </div>
+                    </div>
+                    <div class="health-card liquid-glass">
+                        <div class="health-icon iconHealthHum"><i data-lucide="droplets"></i></div>
+                        <div class="health-content">
+                            <div class="health-title">Air Moisture</div>
+                            <div class="health-status statusHealthHum">Analyzing...</div>
+                            <div class="health-desc descHealthHum">Awaiting humidity sensor data...</div>
+                        </div>
+                    </div>
+                    <div class="health-card liquid-glass">
+                        <div class="health-icon iconHealthLight"><i data-lucide="sun"></i></div>
+                        <div class="health-content">
+                            <div class="health-title">Lighting Quality</div>
+                            <div class="health-status statusHealthLight">Analyzing...</div>
+                            <div class="health-desc descHealthLight">Awaiting brightness sensor data...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="section-header">
+                    <h2><i data-lucide="line-chart"></i> Data Analytics</h2>
+                </div>
+                <div class="grid-charts">
+                    <div class="chart-box liquid-glass">
+                        <div class="chart-title"><i data-lucide="line-chart"></i> Temperature History (°C)</div>
+                        <canvas id="tempChartOverview"></canvas>
+                    </div>
+                    <div class="chart-box liquid-glass">
+                        <div class="chart-title"><i data-lucide="line-chart"></i> Humidity History (%)</div>
+                        <canvas id="humChartOverview"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB SENSORS -->
+        <div id="tab-sensors" class="page-tab">
+            <div class="section-header"><h2><i data-lucide="cpu"></i> Realtime Sensors</h2></div>
+            <div class="grid-5-cards">
+                <div class="card-sm liquid-glass">
+                    <div class="card-sm-header"><span>System Time</span><i data-lucide="clock"></i></div>
+                    <div><div class="clock-time realtimeClock">00:00</div><div class="clock-date realtimeDate">Loading...</div></div>
+                </div>
+                <div class="card-sm liquid-glass">
+                    <div class="card-sm-header"><span>Temperature</span><i data-lucide="thermometer"></i></div>
+                    <div class="card-sm-body"><span class="card-sm-value valTemp">--</span><span class="card-sm-unit">°C</span></div>
+                </div>
+                <div class="card-sm liquid-glass">
+                    <div class="card-sm-header"><span>Humidity</span><i data-lucide="droplets"></i></div>
+                    <div class="card-sm-body"><span class="card-sm-value valHum">--</span><span class="card-sm-unit">%</span></div>
+                </div>
+                <div class="card-sm liquid-glass">
+                    <div class="card-sm-header"><span>Brightness</span><i data-lucide="sun"></i></div>
+                    <div class="card-sm-body"><span class="card-sm-value valLdr">--</span><span class="card-sm-unit">nits</span></div>
+                </div>
+                <div class="card-sm liquid-glass">
+                    <div class="card-sm-header"><span>Potentiometer</span><i data-lucide="sliders"></i></div>
+                    <div class="card-sm-body"><span class="card-sm-value valPot">--</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB FACEID -->
+        <div id="tab-faceid" class="page-tab">
+            <div class="section-header"><h2><i data-lucide="scan-face"></i> Facial Recognition System</h2></div>
+            <div class="husky-card-wrapper">
+                <div class="card-husky liquid-glass huskyCard">
+                    <div class="husky-info">
+                        <h3>HuskyLens Recognition Status</h3>
+                        <div class="husky-name valHusky">Scanning...</div>
+                    </div>
+                    <div class="faceid-wrapper">
+                        <i data-lucide="scan-face" class="faceid-icon"></i>
+                        <i data-lucide="check-circle-2" class="checkmark-icon"></i>
+                    </div>
+                </div>
+                <div class="faceid-drop-tag nameDropTag">
+                    <i data-lucide="user-check"></i> <span class="valDetectedName">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB HEALTH -->
+        <div id="tab-health" class="page-tab">
+            <div class="section-header"><h2><i data-lucide="heart-pulse"></i> Living Environment Assessment</h2></div>
+            <div class="grid-health">
+                <div class="health-card liquid-glass">
+                    <div class="health-icon iconHealthTemp"><i data-lucide="thermometer"></i></div>
+                    <div class="health-content">
+                        <div class="health-title">Thermal Comfort</div>
+                        <div class="health-status statusHealthTemp">Analyzing...</div>
+                        <div class="health-desc descHealthTemp">Awaiting temperature sensor data...</div>
+                    </div>
+                </div>
+                <div class="health-card liquid-glass">
+                    <div class="health-icon iconHealthHum"><i data-lucide="droplets"></i></div>
+                    <div class="health-content">
+                        <div class="health-title">Air Moisture</div>
+                        <div class="health-status statusHealthHum">Analyzing...</div>
+                        <div class="health-desc descHealthHum">Awaiting humidity sensor data...</div>
+                    </div>
+                </div>
+                <div class="health-card liquid-glass">
+                    <div class="health-icon iconHealthLight"><i data-lucide="sun"></i></div>
+                    <div class="health-content">
+                        <div class="health-title">Lighting Quality</div>
+                        <div class="health-status statusHealthLight">Analyzing...</div>
+                        <div class="health-desc descHealthLight">Awaiting brightness sensor data...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB ANALYZE -->
+        <div id="tab-analyze" class="page-tab">
+            <div class="section-header"><h2><i data-lucide="line-chart"></i> Data Analytics</h2></div>
+            <div class="grid-charts">
+                <div class="chart-box liquid-glass">
+                    <div class="chart-title"><i data-lucide="line-chart"></i> Temperature History (°C)</div>
+                    <canvas id="tempChartTab"></canvas>
+                </div>
+                <div class="chart-box liquid-glass">
+                    <div class="chart-title"><i data-lucide="line-chart"></i> Humidity History (%)</div>
+                    <canvas id="humChartTab"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB MEMBERS -->
+        <div id="tab-members" class="page-tab">
+            <div class="section-header"><h2><i data-lucide="users"></i> Project Team Members</h2></div>
+            <div class="grid-members">
+                <div class="member-card liquid-glass special-leader">
+                    <div class="member-avatar leader-avatar">DA</div>
+                    <div class="member-info"><h4>Duong Ho Thien An</h4><p>HCMUTE Students</p></div>
+                </div>
+                <div class="member-card liquid-glass special-deputy">
+                    <div class="member-avatar deputy-avatar">NK</div>
+                    <div class="member-info"><h4>Nguyen Ba Kiet</h4><p>HCMUTE Students</p></div>
+                </div>
+                <div class="member-card liquid-glass"><div class="member-avatar">CP</div><div class="member-info"><h4>Cap Xuan Phuong</h4><p>HCMUTE Students</p></div></div>
+                <div class="member-card liquid-glass"><div class="member-avatar">LH</div><div class="member-info"><h4>Le Thi Ngoc Han</h4><p>HCMUTE Students</p></div></div>
+                <div class="member-card liquid-glass"><div class="member-avatar">NP</div><div class="member-info"><h4>Nguyen Viet Phuong</h4><p>HCMUTE Students</p></div></div>
+                <div class="member-card liquid-glass"><div class="member-avatar">LH</div><div class="member-info"><h4>Lai The Hoang</h4><p>HCMUTE Students</p></div></div>
+                <div class="member-card liquid-glass"><div class="member-avatar">NQ</div><div class="member-info"><h4>Nguyen Danh Quang</h4><p>HCMUTE Students</p></div></div>
+                <div class="member-card liquid-glass"><div class="member-avatar">NP</div><div class="member-info"><h4>Ngo Chinh Phat</h4><p>HCMUTE Students</p></div></div>
+                <div class="member-card liquid-glass"><div class="member-avatar">NP</div><div class="member-info"><h4>Nguyen Ba Phuc</h4><p>HCMUTE Students</p></div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- LIÊN KẾT FILE JAVASCRIPT -->
+    <script src="script.js"></script>
+</body>
+</html>
