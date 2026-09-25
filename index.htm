@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,20 +9,480 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- LIÊN KẾT FILE CSS -->
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg-body: #eef1f5;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --faceid-accent: #30d158;
+            --faceid-scanning: #0071e3;
+            --health-good: #30d158;
+            --health-warning: #ff9f0a;
+            --health-danger: #ff453a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(200, 220, 255, 0.45) 0px, transparent 50%),
+                radial-gradient(at 90% 90%, rgba(220, 200, 255, 0.45) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            padding-bottom: 60px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: calc(100% - 48px);
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* -------------------------------------------------------------
+           ANIMATIONS & HIỆU ỨNG
+           ------------------------------------------------------------- */
+        @keyframes appleSquishy {
+            0% { transform: scale(0.4); opacity: 0; }
+            40% { transform: scale(1.28); opacity: 1; }
+            65% { transform: scale(0.88); }
+            82% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes facePulseSquishy {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
+
+        /* ANIMATION XOAY VÒNG TRÒN KHUYẾT */
+        @keyframes loadingSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-circle {
+            transform-origin: center;
+            animation: loadingSpin 0.9s linear infinite !important;
+        }
+
+        /* HIỆU ỨNG SHAKE (RUNG LỖI) */
+        @keyframes faceidShake {
+            0% { transform: translateX(0) scale(1); }
+            15% { transform: translateX(-8px) scale(1.05); }
+            30% { transform: translateX(8px) scale(1.05); }
+            45% { transform: translateX(-6px) scale(1.05); }
+            60% { transform: translateX(6px) scale(1.05); }
+            75% { transform: translateX(-3px) scale(1); }
+            90% { transform: translateX(3px) scale(1); }
+            100% { transform: translateX(0) scale(1); }
+        }
+
+        .shake-error {
+            animation: faceidShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+        }
+
+        @keyframes iphoneShake {
+            0% { transform: translateX(-50%) translateY(0) scale(1); }
+            15% { transform: translateX(calc(-50% - 10px)) translateY(0) scale(1); }
+            30% { transform: translateX(calc(-50% + 10px)) translateY(0) scale(1); }
+            45% { transform: translateX(calc(-50% - 7px)) translateY(0) scale(1); }
+            60% { transform: translateX(calc(-50% + 7px)) translateY(0) scale(1); }
+            75% { transform: translateX(calc(-50% - 3px)) translateY(0) scale(1); }
+            90% { transform: translateX(calc(-50% + 3px)) translateY(0) scale(1); }
+            100% { transform: translateX(-50%) translateY(0) scale(1); }
+        }
+
+        .di-shake-error {
+            animation: iphoneShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+        }
+
+        /* DYNAMIC ISLAND TRONG SUỐT */
+        .top-dynamic-wrapper {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px) scale(0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .top-dynamic-wrapper.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .dynamic-island-light {
+            background: rgba(40, 40, 45, 0.55);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.05);
+            border-radius: 40px;
+            padding: 10px 24px;
+            min-width: 290px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .top-dynamic-wrapper.denied .dynamic-island-light {
+            border-color: rgba(255, 59, 48, 0.5);
+            box-shadow: 0 20px 40px rgba(255, 59, 48, 0.25), inset 0 0 15px rgba(255, 59, 48, 0.15);
+        }
+
+        .di-content { display: flex; align-items: center; gap: 14px; width: 100%; justify-content: space-between; }
+        .di-left-group { display: flex; align-items: center; gap: 12px; width: 100%; }
+
+        .di-face-container { 
+            position: relative; 
+            width: 38px; 
+            height: 38px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            flex-shrink: 0; 
+        }
+
+        /* LOGIC ĐỔI ICON TRONG CONTAINER */
+        .icon-faceid-default,
+        .icon-spinner-circle,
+        .icon-check-success {
+            position: absolute;
+            transition: opacity 0.2s ease, transform 0.2s ease, stroke 0.2s ease;
+        }
+
+        /* ICON FACE ID CHUẨN IPHONE VỚI NÉT VẼ SIÊU MỎNG ELEGANTE */
+        .icon-faceid-default {
+            width: 32px;
+            height: 32px;
+            stroke: var(--faceid-scanning);
+            stroke-width: 1.25; /* Làm mỏng nét chuẩn Apple iOS */
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            opacity: 1;
+            display: block;
+            animation: facePulseSquishy 2s infinite ease-in-out;
+        }
+
+        /* TRẠNG THÁI FACE ID ĐỎ KHÔNG NHẬN DIỆN ĐƯỢC */
+        .icon-faceid-default.error-mode {
+            stroke: var(--health-danger) !important;
+            animation: none !important;
+        }
+
+        .icon-spinner-circle {
+            width: 30px;
+            height: 30px;
+            opacity: 0;
+            display: none;
+        }
+
+        .icon-spinner-circle path {
+            fill: none;
+            stroke: #0071e3;
+            stroke-width: 5;
+            stroke-linecap: round;
+        }
+
+        .icon-check-success { 
+            width: 26px; 
+            height: 26px; 
+            stroke: var(--faceid-accent); 
+            stroke-width: 1.5; 
+            stroke-linecap: round; 
+            stroke-linejoin: round; 
+            fill: none; 
+            opacity: 0; 
+            display: none;
+        }
+
+        /* THAY ĐỔI TRẠNG THÁI HIỂN THỊ DYNAMIC ISLAND */
+        .top-dynamic-wrapper.unlocking .icon-faceid-default,
+        .top-dynamic-wrapper.unlocking .icon-spinner-circle { 
+            opacity: 0 !important; 
+            display: none !important;
+        }
+        .top-dynamic-wrapper.unlocking .icon-check-success { 
+            opacity: 1 !important; 
+            display: block !important;
+            animation: appleSquishy 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .di-text-box { display: flex; flex-direction: column; justify-content: center; width: 100%; }
+        .di-subtitle { font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .di-main-status { font-size: 0.95rem; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+
+        /* HERO BAR */
+        .hero-bar-fullwidth { width: 100%; background-color: #1d1d1f; color: #ffffff; padding-top: 0px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .hero-bar-inner { max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .logo-group { display: flex; align-items: center; gap: 10px; }
+        .logo-img { height: 38px; width: 38px; object-fit: cover; border-radius: 50%; background: #ffffff; padding: 2px; }
+        .title-group h1 { font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .title-group p { font-size: 0.75rem; color: #a1a1a6; margin-top: 2px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .btn-connect { background: rgba(255, 255, 255, 0.12); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 7px 16px; border-radius: 980px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 980px; font-size: 0.75rem; background: rgba(255, 69, 58, 0.2); color: #ff453a; border: 1px solid rgba(255, 69, 58, 0.3); }
+        .status-badge.connected { color: #30d158; border-color: rgba(48, 209, 88, 0.3); background: rgba(48, 209, 88, 0.2); }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; }
+
+        /* MENU BAR */
+        .apple-nav-sticky { 
+            position: sticky; 
+            top: 15px; 
+            z-index: 1000; 
+            width: calc(100% - 48px); 
+            max-width: 1100px; 
+            margin: 16px auto 32px auto; 
+            height: 58px; 
+            border-radius: 980px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 0 10px; 
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(20px) saturate(180%); 
+            -webkit-backdrop-filter: blur(20px) saturate(180%); 
+            border: 1px solid rgba(255, 255, 255, 0.8); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.5); 
+        }
+
+        .apple-nav-list { position: relative; list-style: none; display: flex; width: 100%; max-width: 980px; justify-content: space-between; align-items: center; }
+
+        .nav-glider { 
+            position: absolute; 
+            top: 50%; 
+            left: 0; 
+            height: 40px; 
+            width: 0; 
+            transform: translateY(-50%); 
+            border-radius: 980px; 
+            pointer-events: none; 
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(10px); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.9); 
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
+            opacity: 0; 
+        }
+
+        .apple-nav-item { position: relative; z-index: 2; }
+        .apple-nav-item button { background: transparent; border: none; color: #515156; font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 980px; cursor: pointer; transition: color 0.2s ease; }
+        .apple-nav-item button:hover { color: #1d1d1f; }
+        .apple-nav-item button.active { color: #1d1d1f; font-weight: 600; }
+
+        /* TABS & CARDS */
+        .page-tab { display: none; }
+        .page-tab.active-tab { display: block; }
+        .section-header { margin: 28px 0 16px 0; }
+        .section-header h2 { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+
+        .liquid-glass { background: rgba(255, 255, 255, 0.35); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04); }
+
+        /* OVERVIEW CARD FACE ID */
+        .overview-faceid-hero {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(240,245,255,0.4));
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: all 0.4s ease;
+        }
+        .overview-faceid-hero.verified {
+            background: linear-gradient(135deg, rgba(48, 209, 88, 0.12), rgba(255,255,255,0.7));
+            border-color: rgba(48, 209, 88, 0.4);
+            box-shadow: 0 10px 30px rgba(48, 209, 88, 0.15);
+        }
+        .overview-faceid-hero.denied {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.12), rgba(255,255,255,0.7));
+            border-color: rgba(255, 59, 48, 0.4);
+            box-shadow: 0 10px 30px rgba(255, 59, 48, 0.15);
+        }
+        .overview-faceid-left { display: flex; align-items: center; gap: 16px; }
+        
+        .overview-faceid-icon-box {
+            width: 48px;
+            height: 48px;
+            background: transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .overview-faceid-hero.verified .icon-faceid-default,
+        .overview-faceid-hero.verified .icon-spinner-circle {
+            opacity: 0 !important;
+            display: none !important;
+        }
+        .overview-faceid-hero.verified .icon-check-success {
+            opacity: 1 !important;
+            display: block !important;
+            animation: appleSquishy 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .overview-faceid-info h3 { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .overview-faceid-info .valHusky { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+
+        /* GRID CARDS */
+        .grid-5-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+
+        .card-sm { padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 105px; }
+        .card-sm-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-secondary); }
+        .card-sm-body { margin-top: 10px; display: flex; align-items: baseline; gap: 4px; }
+        .card-sm-value { font-size: 1.6rem; font-weight: 600; }
+        .card-sm-unit { font-size: 0.85rem; color: var(--text-secondary); }
+
+        .grid-health { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .health-card { padding: 20px; display: flex; gap: 16px; align-items: flex-start; }
+        .health-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+        .health-content { flex: 1; }
+        .health-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+        .health-status { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+        .health-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+
+        .status-good { color: var(--health-good); }
+        .status-warning { color: var(--health-warning); }
+        .status-danger { color: var(--health-danger); }
+        .bg-good { background: rgba(48, 209, 88, 0.15); color: var(--health-good); }
+        .bg-warning { background: rgba(255, 159, 10, 0.15); color: var(--health-warning); }
+        .bg-danger { background: rgba(255, 69, 58, 0.15); color: var(--health-danger); }
+
+        .grid-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .chart-box { padding: 20px; }
+        .chart-title { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+        /* FACE ID PAGE MAIN STYLES */
+        .faceid-dashboard-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+        .faceid-status-card { padding: 24px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+        .faceid-radar-box {
+            width: 95px;
+            height: 95px;
+            background: transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .faceid-radar-box .icon-faceid-default { width: 68px; height: 68px; stroke-width: 1.1; }
+        .faceid-radar-box .icon-spinner-circle { width: 68px; height: 68px; }
+        .faceid-radar-box .icon-check-success { width: 60px; height: 60px; }
+
+        .faceid-radar-box.verified .icon-faceid-default,
+        .faceid-radar-box.verified .icon-spinner-circle { 
+            opacity: 0 !important; 
+            display: none !important; 
+        }
+        .faceid-radar-box.verified .icon-check-success { 
+            opacity: 1 !important; 
+            display: block !important; 
+            animation: appleSquishy 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .faceid-logs-card { padding: 24px; }
+        .faceid-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .faceid-table th, .faceid-table td { padding: 12px 16px; text-align: left; font-size: 0.85rem; border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
+        .faceid-table th { color: var(--text-secondary); font-weight: 600; }
+
+        .user-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 980px; background: rgba(0, 113, 227, 0.1); color: #0071e3; font-weight: 600; }
+        .user-tag.denied { background: rgba(255, 59, 48, 0.1); color: #ff3b30; }
+
+        .grid-members { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .member-card { padding: 16px; display: flex; align-items: center; gap: 12px; position: relative; }
+        .member-avatar { width: 42px; height: 42px; border-radius: 50%; background: #e5e5ea; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; }
+        .member-info h4 { font-size: 0.9rem; font-weight: 600; }
+        .member-info p { font-size: 0.75rem; color: var(--text-secondary); }
+        .special-leader { border: 1.5px solid rgba(255, 215, 0, 0.6); background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 248, 220, 0.35)); }
+        .leader-avatar { background: #ffe885; color: #8a6d00; }
+        .special-deputy { border: 1.5px solid rgba(0, 113, 227, 0.4); background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(220, 240, 255, 0.35)); }
+        .deputy-avatar { background: #b3d7ff; color: #004085; }
+
+        @media (max-width: 850px) { .faceid-dashboard-grid { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
 
-    <!-- 1. HERO BAR -->
+    <!-- DYNAMIC ISLAND TRONG SUỐT -->
+    <div class="top-dynamic-wrapper" id="topDynamicWrapper">
+        <div class="dynamic-island-light">
+            <div class="di-content">
+                <div class="di-left-group">
+                    <div class="di-face-container">
+                        <!-- 1. ICON FACE ID CHUẨN IPHONE (NÉT SIÊU MỎNG) -->
+                        <svg class="icon-faceid-default" viewBox="0 0 24 24">
+                            <!-- Khung 4 góc nhận diện bo tròn nhẹ -->
+                            <path d="M7 3H5a2 2 0 0 0-2 2v2" />
+                            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                            <path d="M3 17v2a2 2 0 0 0 2 2h2" />
+                            <!-- Mắt -->
+                            <line x1="9" y1="9" x2="9" y2="10" />
+                            <line x1="15" y1="9" x2="15" y2="10" />
+                            <!-- Mũi -->
+                            <path d="M12 9v4a1 1 0 0 1-1 1h-1" />
+                            <!-- Miệng cười nhẹ -->
+                            <path d="M9 17c.83.67 1.83 1 3 1s2.17-.33 3-1" />
+                        </svg>
+
+                        <!-- 2. ICON VÒNG TRÒN KHUYẾT (HIỂN THỊ KHI ĐANG PHÂN TÍCH) -->
+                        <svg class="icon-spinner-circle" viewBox="0 0 100 100">
+                            <path d="M 45 88.6 A 40 40 0 1 1 55 88.6" />
+                        </svg>
+
+                        <!-- 3. ICON TÍCH XANH THÀNH CÔNG -->
+                        <svg class="icon-check-success" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <polyline points="9 12 11 14 15 10"></polyline>
+                        </svg>
+                    </div>
+                    <div class="di-text-box">
+                        <span class="di-subtitle" id="dynamicSubtitle">Face ID Status</span>
+                        <span class="di-main-status" id="dynamicIslandName">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HERO BAR -->
     <header class="hero-bar-fullwidth">
         <div class="hero-bar-inner">
             <div class="header-left">
                 <div class="logo-group">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShBzNwXiR6P9DiAB4rbMAkRa5suN6IsiA6jSBxlsmgd4SEbtAIZ4pgvA7o&s=10" alt="HCMUTE Logo" class="logo-img">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2OzICmfFHaDyRblXUSlmG_Zbvg1bcZSqJve94jyObnMVNAk-ifxh0UGI&s=10" alt="Logo 1" class="logo-img">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgUTWTv8VtIK0hTDU_MsfqPATJtEVcjjy_EpfXKiaT1glvg1JhE218HMaQ&s=10" alt="Logo 2" class="logo-img">
                 </div>
                 <div class="title-group">
-                    <h1>Group 4 - Automation & Control <span class="domain-tag">g4hcmutetdh</span></h1>
+                    <h1>Group 4 - Automation & Control </h1>
                     <p>Sensor & Facial Recognition Monitoring System</p>
                 </div>
             </div>
@@ -40,40 +500,39 @@
         </div>
     </header>
 
-    <!-- 2. NAVIGATION BAR (LIQUID GLASS SLIDER) -->
+    <!-- NAVIGATION BAR -->
     <nav class="apple-nav-sticky">
         <ul class="apple-nav-list" id="appleNavList">
-            <!-- Bong bóng kính trượt lỏng -->
             <div class="nav-glider" id="navGlider"></div>
 
             <li class="apple-nav-item">
                 <button class="nav-btn active" onclick="switchTab('tab-overview', this)">
-                    <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Overview
-                </button>
-            </li>
-            <li class="apple-nav-item">
-                <button class="nav-btn" onclick="switchTab('tab-sensors', this)">
-                    <i data-lucide="cpu" style="width: 16px; height: 16px;"></i> Sensors
+                    <i data-lucide="layout-dashboard" style="width: 15px; height: 15px;"></i> Overview
                 </button>
             </li>
             <li class="apple-nav-item">
                 <button class="nav-btn" onclick="switchTab('tab-faceid', this)">
-                    <i data-lucide="scan-face" style="width: 16px; height: 16px;"></i> FaceID
+                    <i data-lucide="scan-face" style="width: 15px; height: 15px;"></i> Face ID
+                </button>
+            </li>
+            <li class="apple-nav-item">
+                <button class="nav-btn" onclick="switchTab('tab-sensors', this)">
+                    <i data-lucide="cpu" style="width: 15px; height: 15px;"></i> Sensors
                 </button>
             </li>
             <li class="apple-nav-item">
                 <button class="nav-btn" onclick="switchTab('tab-health', this)">
-                    <i data-lucide="heart-pulse" style="width: 16px; height: 16px;"></i> Health Check
+                    <i data-lucide="heart-pulse" style="width: 15px; height: 15px;"></i> Health Check
                 </button>
             </li>
             <li class="apple-nav-item">
                 <button class="nav-btn" onclick="switchTab('tab-analyze', this)">
-                    <i data-lucide="line-chart" style="width: 16px; height: 16px;"></i> Analyze
+                    <i data-lucide="line-chart" style="width: 15px; height: 15px;"></i> Analyze
                 </button>
             </li>
             <li class="apple-nav-item">
                 <button class="nav-btn" onclick="switchTab('tab-members', this)">
-                    <i data-lucide="users" style="width: 16px; height: 16px;"></i> Members
+                    <i data-lucide="users" style="width: 15px; height: 15px;"></i> Members
                 </button>
             </li>
         </ul>
@@ -82,14 +541,56 @@
     <main>
         <!-- TAB OVERVIEW -->
         <div id="tab-overview" class="page-tab active-tab">
-            <section>
+            <section style="cursor: pointer;" onclick="switchTab('tab-faceid', document.querySelectorAll('.nav-btn')[1])">
                 <div class="section-header">
-                    <h2><i data-lucide="activity"></i> Realtime Sensors</h2>
+                    <h2><i data-lucide="scan-face"></i> Facial Recognition Access Status</h2>
+                </div>
+                <div class="overview-faceid-hero liquid-glass" id="overviewFaceCard">
+                    <div class="overview-faceid-left">
+                        <div class="overview-faceid-icon-box" id="overviewFaceIconBox">
+                            <!-- ICON 1: FACE ID MẶC ĐỊNH CHUẨN IPHONE -->
+                            <svg class="icon-faceid-default" viewBox="0 0 24 24">
+                                <path d="M7 3H5a2 2 0 0 0-2 2v2" />
+                                <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                                <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                                <path d="M3 17v2a2 2 0 0 0 2 2h2" />
+                                <line x1="9" y1="9" x2="9" y2="10" />
+                                <line x1="15" y1="9" x2="15" y2="10" />
+                                <path d="M12 9v4a1 1 0 0 1-1 1h-1" />
+                                <path d="M9 17c.83.67 1.83 1 3 1s2.17-.33 3-1" />
+                            </svg>
+                            <!-- ICON 2: VÒNG TRÒN QUAY PHÂN TÍCH -->
+                            <svg class="icon-spinner-circle" viewBox="0 0 100 100">
+                                <path d="M 45 88.6 A 40 40 0 1 1 55 88.6" />
+                            </svg>
+                            <!-- ICON 3: THÀNH CÔNG -->
+                            <svg class="icon-check-success" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <polyline points="9 12 11 14 15 10"></polyline>
+                            </svg>
+                        </div>
+                        <div class="overview-faceid-info">
+                            <h3>HuskyLens Recognition</h3>
+                            <div class="valHusky">Scanning...</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 980px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                            View Logs <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SENSORS OVERVIEW -->
+            <section style="cursor: pointer;" onclick="switchTab('tab-sensors', document.querySelectorAll('.nav-btn')[2])">
+                <div class="section-header">
+                    <h2><i data-lucide="activity"></i> Realtime Environment Sensors</h2>
                 </div>
                 <div class="grid-5-cards">
                     <div class="card-sm liquid-glass">
                         <div class="card-sm-header"><span>System Time</span><i data-lucide="clock"></i></div>
-                        <div><div class="clock-time realtimeClock">00:00</div><div class="clock-date realtimeDate">Loading...</div></div>
+                        <div><div class="clock-time realtimeClock" style="font-size: 1.5rem; font-weight: 600;">00:00</div><div class="clock-date realtimeDate" style="font-size: 0.72rem; color: var(--text-secondary);">Loading...</div></div>
                     </div>
                     <div class="card-sm liquid-glass">
                         <div class="card-sm-header"><span>Temperature</span><i data-lucide="thermometer"></i></div>
@@ -110,28 +611,8 @@
                 </div>
             </section>
 
-            <section>
-                <div class="section-header">
-                    <h2><i data-lucide="scan-face"></i> Facial Recognition System</h2>
-                </div>
-                <div class="husky-card-wrapper">
-                    <div class="card-husky liquid-glass huskyCard">
-                        <div class="husky-info">
-                            <h3>HuskyLens Recognition Status</h3>
-                            <div class="husky-name valHusky">Scanning...</div>
-                        </div>
-                        <div class="faceid-wrapper">
-                            <i data-lucide="scan-face" class="faceid-icon"></i>
-                            <i data-lucide="check-circle-2" class="checkmark-icon"></i>
-                        </div>
-                    </div>
-                    <div class="faceid-drop-tag nameDropTag">
-                        <i data-lucide="user-check"></i> <span class="valDetectedName">--</span>
-                    </div>
-                </div>
-            </section>
-
-            <section>
+            <!-- HEALTH CHECK OVERVIEW -->
+            <section style="cursor: pointer;" onclick="switchTab('tab-health', document.querySelectorAll('.nav-btn')[3])">
                 <div class="section-header">
                     <h2><i data-lucide="heart-pulse"></i> Living Environment Assessment</h2>
                 </div>
@@ -141,7 +622,7 @@
                         <div class="health-content">
                             <div class="health-title">Thermal Comfort</div>
                             <div class="health-status statusHealthTemp">Analyzing...</div>
-                            <div class="health-desc descHealthTemp">Awaiting temperature sensor data...</div>
+                            <div class="health-desc descHealthTemp">Awaiting sensor data to evaluate room temperature.</div>
                         </div>
                     </div>
                     <div class="health-card liquid-glass">
@@ -149,7 +630,7 @@
                         <div class="health-content">
                             <div class="health-title">Air Moisture</div>
                             <div class="health-status statusHealthHum">Analyzing...</div>
-                            <div class="health-desc descHealthHum">Awaiting humidity sensor data...</div>
+                            <div class="health-desc descHealthHum">Awaiting sensor data to evaluate humidity levels.</div>
                         </div>
                     </div>
                     <div class="health-card liquid-glass">
@@ -157,13 +638,14 @@
                         <div class="health-content">
                             <div class="health-title">Lighting Quality</div>
                             <div class="health-status statusHealthLight">Analyzing...</div>
-                            <div class="health-desc descHealthLight">Awaiting brightness sensor data...</div>
+                            <div class="health-desc descHealthLight">Awaiting sensor data to evaluate visual comfort.</div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section>
+            <!-- ANALYZE OVERVIEW -->
+            <section style="cursor: pointer;" onclick="switchTab('tab-analyze', document.querySelectorAll('.nav-btn')[4])">
                 <div class="section-header">
                     <h2><i data-lucide="line-chart"></i> Data Analytics</h2>
                 </div>
@@ -180,13 +662,89 @@
             </section>
         </div>
 
+        <!-- TAB FACE ID MAIN -->
+        <div id="tab-faceid" class="page-tab">
+            <div class="section-header">
+                <h2><i data-lucide="scan-face"></i> Face ID Access Control & History</h2>
+            </div>
+            
+            <div class="faceid-dashboard-grid">
+                <div class="faceid-status-card liquid-glass">
+                    <h3>Current Status</h3>
+                    
+                    <div class="faceid-radar-box" id="faceidRadarBox">
+                        <!-- ICON 1: FACE ID MẶC ĐỊNH CHUẨN IPHONE -->
+                        <svg class="icon-faceid-default" viewBox="0 0 24 24">
+                            <path d="M7 3H5a2 2 0 0 0-2 2v2" />
+                            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                            <path d="M3 17v2a2 2 0 0 0 2 2h2" />
+                            <line x1="9" y1="9" x2="9" y2="10" />
+                            <line x1="15" y1="9" x2="15" y2="10" />
+                            <path d="M12 9v4a1 1 0 0 1-1 1h-1" />
+                            <path d="M9 17c.83.67 1.83 1 3 1s2.17-.33 3-1" />
+                        </svg>
+
+                        <!-- ICON 2: VÒNG TRÒN KHUYẾT QUAY -->
+                        <svg class="icon-spinner-circle" viewBox="0 0 100 100">
+                            <path d="M 45 88.6 A 40 40 0 1 1 55 88.6" />
+                        </svg>
+
+                        <!-- ICON 3: THÀNH CÔNG -->
+                        <svg class="icon-check-success" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <polyline points="9 12 11 14 15 10"></polyline>
+                        </svg>
+                    </div>
+
+                    <h2 class="valHusky" id="faceidStatusText" style="font-size: 1.4rem; font-weight: 700; margin-bottom: 6px;">Scanning...</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Real-time HuskyLens Status</p>
+
+                    <div style="width: 100%; border-top: 1px solid rgba(0,0,0,0.06); margin-top: 20px; padding-top: 16px; display: flex; justify-content: space-around;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Detections</div>
+                            <div id="totalDetections" style="font-size: 1.2rem; font-weight: 700;">0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">System Status</div>
+                            <div style="font-size: 1.2rem; font-weight: 700; color: var(--faceid-accent);">Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faceid-logs-card liquid-glass">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Recognition History</h3>
+                        <button onclick="clearFaceIDLogs()" style="background: transparent; border: none; color: var(--health-danger); font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Clear Logs
+                        </button>
+                    </div>
+
+                    <table class="faceid-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Identified Person</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="faceidLogTableBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 24px;">No face recognition logs recorded yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- TAB SENSORS -->
         <div id="tab-sensors" class="page-tab">
             <div class="section-header"><h2><i data-lucide="cpu"></i> Realtime Sensors</h2></div>
             <div class="grid-5-cards">
                 <div class="card-sm liquid-glass">
                     <div class="card-sm-header"><span>System Time</span><i data-lucide="clock"></i></div>
-                    <div><div class="clock-time realtimeClock">00:00</div><div class="clock-date realtimeDate">Loading...</div></div>
+                    <div><div class="clock-time realtimeClock" style="font-size: 1.5rem; font-weight: 600;">00:00</div><div class="clock-date realtimeDate" style="font-size: 0.72rem; color: var(--text-secondary);">Loading...</div></div>
                 </div>
                 <div class="card-sm liquid-glass">
                     <div class="card-sm-header"><span>Temperature</span><i data-lucide="thermometer"></i></div>
@@ -207,27 +765,7 @@
             </div>
         </div>
 
-        <!-- TAB FACEID -->
-        <div id="tab-faceid" class="page-tab">
-            <div class="section-header"><h2><i data-lucide="scan-face"></i> Facial Recognition System</h2></div>
-            <div class="husky-card-wrapper">
-                <div class="card-husky liquid-glass huskyCard">
-                    <div class="husky-info">
-                        <h3>HuskyLens Recognition Status</h3>
-                        <div class="husky-name valHusky">Scanning...</div>
-                    </div>
-                    <div class="faceid-wrapper">
-                        <i data-lucide="scan-face" class="faceid-icon"></i>
-                        <i data-lucide="check-circle-2" class="checkmark-icon"></i>
-                    </div>
-                </div>
-                <div class="faceid-drop-tag nameDropTag">
-                    <i data-lucide="user-check"></i> <span class="valDetectedName">--</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB HEALTH -->
+        <!-- TAB HEALTH CHECK -->
         <div id="tab-health" class="page-tab">
             <div class="section-header"><h2><i data-lucide="heart-pulse"></i> Living Environment Assessment</h2></div>
             <div class="grid-health">
@@ -236,7 +774,7 @@
                     <div class="health-content">
                         <div class="health-title">Thermal Comfort</div>
                         <div class="health-status statusHealthTemp">Analyzing...</div>
-                        <div class="health-desc descHealthTemp">Awaiting temperature sensor data...</div>
+                        <div class="health-desc descHealthTemp">Awaiting sensor data to evaluate room temperature.</div>
                     </div>
                 </div>
                 <div class="health-card liquid-glass">
@@ -244,7 +782,7 @@
                     <div class="health-content">
                         <div class="health-title">Air Moisture</div>
                         <div class="health-status statusHealthHum">Analyzing...</div>
-                        <div class="health-desc descHealthHum">Awaiting humidity sensor data...</div>
+                        <div class="health-desc descHealthHum">Awaiting sensor data to evaluate humidity levels.</div>
                     </div>
                 </div>
                 <div class="health-card liquid-glass">
@@ -252,7 +790,7 @@
                     <div class="health-content">
                         <div class="health-title">Lighting Quality</div>
                         <div class="health-status statusHealthLight">Analyzing...</div>
-                        <div class="health-desc descHealthLight">Awaiting brightness sensor data...</div>
+                        <div class="health-desc descHealthLight">Awaiting sensor data to evaluate visual comfort.</div>
                     </div>
                 </div>
             </div>
@@ -283,7 +821,7 @@
                 </div>
                 <div class="member-card liquid-glass special-deputy">
                     <div class="member-avatar deputy-avatar">NK</div>
-                    <div class="member-info"><h4>Phan Le Ba Kiet</h4><p>HCMUTE Students</p></div>
+                    <div class="member-info"><h4>Nguyen Ba Kiet</h4><p>HCMUTE Students</p></div>
                 </div>
                 <div class="member-card liquid-glass"><div class="member-avatar">CP</div><div class="member-info"><h4>Cap Xuan Phuong</h4><p>HCMUTE Students</p></div></div>
                 <div class="member-card liquid-glass"><div class="member-avatar">LH</div><div class="member-info"><h4>Le Thi Ngoc Han</h4><p>HCMUTE Students</p></div></div>
@@ -296,7 +834,526 @@
         </div>
     </main>
 
-    <!-- LIÊN KẾT FILE JAVASCRIPT -->
-    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+
+        /* ÂM THANH MỞ KHÓA THÀNH CÔNG */
+        function playApplePaySound() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+                
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(1396.91, now);
+                gain1.gain.setValueAtTime(0, now);
+                gain1.gain.linearRampToValueAtTime(0.3, now + 0.02);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc1.connect(gain1); gain1.connect(ctx.destination);
+                osc1.start(now); osc1.stop(now + 0.35);
+
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(2093.00, now + 0.08);
+                gain2.gain.setValueAtTime(0, now + 0.08);
+                gain2.gain.linearRampToValueAtTime(0.4, now + 0.1);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc2.connect(gain2); gain2.connect(ctx.destination);
+                osc2.start(now + 0.08); osc2.stop(now + 0.6);
+            } catch (e) {}
+        }
+
+        /* ÂM THANH BÁO LỖI */
+        function playiPhoneErrorSound() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.setValueAtTime(110, now + 0.12);
+
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } catch (e) {}
+        }
+
+        function triggerDeviceVibration() {
+            if ("vibrate" in navigator) {
+                navigator.vibrate([100, 50, 100, 50, 150]);
+            }
+        }
+
+        function switchTab(tabId, btnElem) {
+            document.querySelectorAll('.page-tab').forEach(tab => tab.classList.remove('active-tab'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active-tab');
+            btnElem.classList.add('active');
+            if (typeof moveGliderTo === 'function') moveGliderTo(btnElem);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        let moveGliderTo;
+        document.addEventListener('DOMContentLoaded', () => {
+            const navList = document.getElementById('appleNavList');
+            const glider = document.getElementById('navGlider');
+            const navBtns = document.querySelectorAll('.nav-btn');
+
+            moveGliderTo = function(element) {
+                if (!element || !glider || !navList) return;
+                const navRect = navList.getBoundingClientRect();
+                const btnRect = element.getBoundingClientRect();
+                glider.style.width = `${btnRect.width}px`;
+                glider.style.left = `${btnRect.left - navRect.left}px`;
+                glider.style.opacity = '1';
+            };
+
+            setTimeout(() => {
+                const activeBtn = document.querySelector('.nav-btn.active');
+                if (activeBtn) moveGliderTo(activeBtn);
+            }, 100);
+
+            navBtns.forEach(btn => btn.addEventListener('mouseenter', (e) => moveGliderTo(e.currentTarget)));
+            navList.addEventListener('mouseleave', () => {
+                const activeBtn = document.querySelector('.nav-btn.active');
+                if (activeBtn) moveGliderTo(activeBtn);
+            });
+        });
+
+        function updateClock() {
+            const now = new Date();
+            document.querySelectorAll('.realtimeClock').forEach(el => el.innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
+            document.querySelectorAll('.realtimeDate').forEach(el => el.innerText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        let port, reader;
+        const maxPoints = 15;
+        Chart.defaults.color = '#86868b';
+        const createChart = (ctxId, label, borderColor) => new Chart(document.getElementById(ctxId), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label, data: [], borderColor, borderWidth: 2, fill: true, tension: 0.3, pointRadius: 2 }] },
+            options: { responsive: true, scales: { y: { beginAtZero: false } } }
+        });
+
+        const tempChartOverview = createChart('tempChartOverview', 'Temperature (°C)', '#1d1d1f');
+        const humChartOverview = createChart('humChartOverview', 'Humidity (%)', '#6e6e73');
+        const tempChartTab = createChart('tempChartTab', 'Temperature (°C)', '#1d1d1f');
+        const humChartTab = createChart('humChartTab', 'Humidity (%)', '#6e6e73');
+
+        function calculateSmartphoneNits(rawInput) {
+            if (rawInput === undefined || rawInput === null || isNaN(rawInput)) return null;
+            let val = parseFloat(rawInput);
+            if (val <= 1023) {
+                let inverted = 1023 - Math.max(0, Math.min(1023, val)); 
+                return Math.round((inverted / 1023) * 500);
+            }
+            return Math.round(val);
+        }
+
+        let lastValidData = { temp: null, hum: null, nits: null };
+
+        function evaluateHealthCheck(temp, hum, nits) {
+            if (temp !== null && temp !== undefined && !isNaN(temp)) lastValidData.temp = temp;
+            if (hum !== null && hum !== undefined && !isNaN(hum)) lastValidData.hum = hum;
+            if (nits !== null && nits !== undefined && !isNaN(nits)) lastValidData.nits = nits;
+
+            let t = lastValidData.temp;
+            let h = lastValidData.hum;
+            let n = lastValidData.nits;
+
+            if (t !== null) {
+                document.querySelectorAll('.iconHealthTemp').forEach(iconTemp => {
+                    const card = iconTemp.closest('.health-card');
+                    const statusTemp = card.querySelector('.health-status');
+                    const descTemp = card.querySelector('.health-desc');
+                    iconTemp.className = 'health-icon iconHealthTemp'; 
+                    statusTemp.className = 'health-status statusHealthTemp';
+
+                    if (t >= 20 && t < 27) {
+                        iconTemp.classList.add('bg-good'); 
+                        statusTemp.classList.add('status-good'); 
+                        statusTemp.innerText = "Optimal Range"; 
+                        descTemp.innerText = `Temperature of ${t}°C is within the ideal range (20°C - 27°C). Comfortable air.`;
+                    } else if (t < 20) {
+                        iconTemp.classList.add('bg-warning'); 
+                        statusTemp.classList.add('status-warning'); 
+                        statusTemp.innerText = "Too Cold (Unreasonable)"; 
+                        descTemp.innerText = `Temperature of ${t}°C is too low (< 20°C). Causes a cold feeling, suboptimal for health.`;
+                    } else {
+                        iconTemp.classList.add('bg-danger'); 
+                        statusTemp.classList.add('status-danger'); 
+                        statusTemp.innerText = "Too Hot (Unreasonable)"; 
+                        descTemp.innerText = `Temperature of ${t}°C is too high (>= 27°C). Causes stuffiness and discomfort, unreasonable for living spaces.`;
+                    }
+                });
+            }
+
+            if (h !== null) {
+                document.querySelectorAll('.iconHealthHum').forEach(iconHum => {
+                    const card = iconHum.closest('.health-card');
+                    const statusHum = card.querySelector('.health-status');
+                    const descHum = card.querySelector('.health-desc');
+                    iconHum.className = 'health-icon iconHealthHum'; 
+                    statusHum.className = 'health-status statusHealthHum';
+
+                    if (h >= 40 && h <= 60) {
+                        iconHum.classList.add('bg-good'); 
+                        statusHum.classList.add('status-good'); 
+                        statusHum.innerText = "Healthy Moisture"; 
+                        descHum.innerText = `Humidity of ${h}% reaches standard levels (40% - 60%). Good for skin and respiratory system.`;
+                    } else if (h < 40) {
+                        iconHum.classList.add('bg-warning'); 
+                        statusHum.classList.add('status-warning'); 
+                        statusHum.innerText = "Too Dry (Unreasonable)"; 
+                        descHum.innerText = `Humidity of ${h}% is too low (< 40%). Dry air causes skin chapping and throat dryness.`;
+                    } else {
+                        iconHum.classList.add('bg-danger'); 
+                        statusHum.classList.add('status-danger'); 
+                        statusHum.innerText = "Too Humid (Unreasonable)"; 
+                        descHum.innerText = `Humidity of ${h}% is too high (> 60%). Easily breeds mold, dampness is unreasonable.`;
+                    }
+                });
+            }
+
+            if (n !== null) {
+                document.querySelectorAll('.iconHealthLight').forEach(iconLight => {
+                    const card = iconLight.closest('.health-card');
+                    const statusLight = card.querySelector('.health-status');
+                    const descLight = card.querySelector('.health-desc');
+                    iconLight.className = 'health-icon iconHealthLight'; 
+                    statusLight.className = 'health-status statusHealthLight';
+
+                    if (n >= 150 && n <= 350) {
+                        iconLight.classList.add('bg-good'); 
+                        statusLight.classList.add('status-good'); 
+                        statusLight.innerText = "Comfortable Light"; 
+                        descLight.innerText = `Brightness of ${n} nits meets standards (150 - 350 nits). Safe for eyes.`;
+                    } else if (n < 150) {
+                        iconLight.classList.add('bg-warning'); 
+                        statusLight.classList.add('status-warning'); 
+                        statusLight.innerText = "Too Dim (Unreasonable)"; 
+                        descLight.innerText = `Brightness of ${n} nits is too dim (< 150 nits). Causes eye strain, insufficient light for working.`;
+                    } else {
+                        iconLight.classList.add('bg-danger'); 
+                        statusLight.classList.add('status-danger'); 
+                        statusLight.innerText = "Too Bright (Unreasonable)"; 
+                        descLight.innerText = `Brightness of ${n} nits is too glaring (> 350 nits). Causes eye glare, unreasonable for vision.`;
+                    }
+                });
+            }
+        }
+
+        async function requestNewPort() {
+            try {
+                port = await navigator.serial.requestPort();
+                startReading(port);
+            } catch (err) {}
+        }
+
+        async function startReading(selectedPort) {
+            try {
+                await selectedPort.open({ baudRate: 9600 });
+                document.getElementById('statusBadge').classList.add('connected');
+                document.getElementById('statusText').innerText = "Connected";
+                document.getElementById('btnConnectText').innerText = "Auto-Connected";
+
+                const textDecoder = new TextDecoderStream();
+                selectedPort.readable.pipeTo(textDecoder.writable);
+                reader = textDecoder.readable.getReader();
+
+                let buffer = "";
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += value;
+                    let lines = buffer.split("\n");
+                    buffer = lines.pop();
+                    for (let line of lines) parseData(line.trim());
+                }
+            } catch (err) {
+                document.getElementById('statusBadge').classList.remove('connected');
+                document.getElementById('statusText').innerText = "Disconnected";
+                document.getElementById('btnConnectText').innerText = "Connect USB";
+            }
+        }
+
+        let isFaceIDLocked = false;
+        let faceIDTimeout = null;
+        let detectionCount = 0;
+        let unknownTimer = null;
+        let isUnknownActive = false;
+
+        /* HAM CHUYỂN SANG VÒNG TRÒN XOAY (ANALYZING) */
+        function setIconStateAnalyzing() {
+            document.querySelectorAll('.icon-faceid-default').forEach(el => {
+                el.style.opacity = '0';
+                el.style.display = 'none';
+                el.classList.remove('error-mode', 'shake-error');
+            });
+
+            document.querySelectorAll('.icon-spinner-circle').forEach(el => {
+                el.style.opacity = '1';
+                el.style.display = 'block';
+                el.classList.add('spinner-circle');
+            });
+        }
+
+        /* HÀM CHUYỂN SANG ICON FACE ID MÀU ĐỎ + CÓ HIỆU ỨNG SHAKE (LỖI) */
+        function setIconStateError() {
+            document.querySelectorAll('.icon-spinner-circle').forEach(el => {
+                el.style.opacity = '0';
+                el.style.display = 'none';
+                el.classList.remove('spinner-circle');
+            });
+
+            document.querySelectorAll('.icon-faceid-default').forEach(el => {
+                el.style.opacity = '1';
+                el.style.display = 'block';
+                el.classList.add('error-mode');
+                
+                // Re-trigger CSS animation shake
+                el.classList.remove('shake-error');
+                void el.offsetWidth;
+                el.classList.add('shake-error');
+            });
+        }
+
+        /* HAM QUAY VỀ ICON FACE ID MẶC ĐỊNH (IDLE / SCANNING) */
+        function resetIconStateIdle() {
+            document.querySelectorAll('.icon-faceid-default').forEach(el => {
+                el.style.opacity = '1';
+                el.style.display = 'block';
+                el.classList.remove('error-mode', 'shake-error');
+            });
+
+            document.querySelectorAll('.icon-spinner-circle').forEach(el => {
+                el.style.opacity = '0';
+                el.style.display = 'none';
+                el.classList.remove('spinner-circle');
+            });
+        }
+
+        function parseData(jsonStr) {
+            if (!jsonStr) return;
+            let cleanStr = jsonStr.substring(jsonStr.indexOf('{'), jsonStr.lastIndexOf('}') + 1);
+            if (!cleanStr) return;
+
+            try {
+                let data = JSON.parse(cleanStr);
+                let timeLabel = new Date().toLocaleTimeString();
+
+                if (data.temp !== undefined) {
+                    document.querySelectorAll('.valTemp').forEach(el => el.innerText = data.temp);
+                    updateChart(tempChartOverview, timeLabel, data.temp);
+                    updateChart(tempChartTab, timeLabel, data.temp);
+                }
+                if (data.hum !== undefined) {
+                    document.querySelectorAll('.valHum').forEach(el => el.innerText = data.hum);
+                    updateChart(humChartOverview, timeLabel, data.hum);
+                    updateChart(humChartTab, timeLabel, data.hum);
+                }
+                let calculatedNits = undefined;
+                if (data.ldr !== undefined) {
+                    calculatedNits = calculateSmartphoneNits(data.ldr);
+                    document.querySelectorAll('.valLdr').forEach(el => el.innerText = calculatedNits);
+                }
+                if (data.pot !== undefined) document.querySelectorAll('.valPot').forEach(el => el.innerText = data.pot);
+                
+                evaluateHealthCheck(data.temp, data.hum, calculatedNits);
+
+                if (data.husky !== undefined) {
+                    let huskyVal = String(data.husky).trim();
+                    if (huskyVal === "Dang quet...") huskyVal = "Scanning...";
+                    if (huskyVal === "Loi ket noi!") huskyVal = "Connection Error";
+                    if (huskyVal === "KHUON MAT LA!") huskyVal = "UNKNOWN FACE";
+
+                    const isUnknownSignal = (huskyVal === "UNKNOWN FACE");
+                    const isScanning = (huskyVal === "Scanning...");
+                    const isValidFace = huskyVal.length > 0 && 
+                                        !isScanning && 
+                                        huskyVal !== "Connection Error" && 
+                                        !isUnknownSignal;
+
+                    if (isValidFace && !isFaceIDLocked) {
+                        if (unknownTimer) { clearTimeout(unknownTimer); unknownTimer = null; }
+                        isUnknownActive = false;
+
+                        triggerFaceIDSequence(huskyVal);
+                        addFaceIDLog(huskyVal, true);
+                    } else if (!isFaceIDLocked) {
+                        if (isUnknownSignal && !isUnknownActive) {
+                            if (!unknownTimer) {
+                                // Đang phân tích -> Hiện vòng tròn quay
+                                setIconStateAnalyzing();
+                                document.querySelectorAll('.valHusky').forEach(el => el.innerText = "Analyzing Face...");
+
+                                unknownTimer = setTimeout(() => {
+                                    isUnknownActive = true;
+                                    triggerNotGroupMemberSequence();
+                                    addFaceIDLog("Unknown Person", false);
+                                }, 2000);
+                            }
+                        } else if (isScanning && !isUnknownActive) {
+                            if (unknownTimer) { clearTimeout(unknownTimer); unknownTimer = null; }
+                            document.querySelectorAll('.valHusky').forEach(el => el.innerText = huskyVal);
+                            
+                            // Trạng thái chờ quét bình thường -> Giữ icon Face ID gốc
+                            resetIconStateIdle();
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function triggerNotGroupMemberSequence() {
+            isFaceIDLocked = true;
+            const message = "Not a group member";
+
+            const topWrapper = document.getElementById('topDynamicWrapper');
+            const subTitleElem = document.getElementById('dynamicSubtitle');
+            const nameElem = document.getElementById('dynamicIslandName');
+            const overviewCard = document.getElementById('overviewFaceCard');
+
+            // Chuyển sang Icon Face ID Màu Đỏ + Rung Shake
+            setIconStateError();
+
+            if (subTitleElem) subTitleElem.innerText = "Access Denied";
+            if (nameElem) nameElem.innerText = message;
+            document.querySelectorAll('.valHusky').forEach(el => el.innerText = message);
+
+            if (overviewCard) overviewCard.classList.add('denied');
+            if (topWrapper) {
+                topWrapper.classList.add('active', 'denied');
+                topWrapper.classList.remove('di-shake-error');
+                void topWrapper.offsetWidth;
+                topWrapper.classList.add('di-shake-error');
+            }
+
+            playiPhoneErrorSound();
+            triggerDeviceVibration();
+
+            if (faceIDTimeout) clearTimeout(faceIDTimeout);
+            faceIDTimeout = setTimeout(() => {
+                if (topWrapper) {
+                    topWrapper.classList.remove('active', 'denied', 'di-shake-error');
+                }
+                if (overviewCard) overviewCard.classList.remove('denied');
+                if (subTitleElem) subTitleElem.innerText = "Face ID Status";
+                
+                document.querySelectorAll('.valHusky').forEach(el => el.innerText = "Scanning...");
+
+                // Reset về icon Face ID gốc (màu xanh mặc định)
+                resetIconStateIdle();
+
+                isFaceIDLocked = false;
+                isUnknownActive = false;
+                if (unknownTimer) { clearTimeout(unknownTimer); unknownTimer = null; }
+            }, 3000);
+        }
+
+        function triggerFaceIDSequence(detectedName) {
+            isFaceIDLocked = true;
+
+            const topWrapper = document.getElementById('topDynamicWrapper');
+            const subTitleElem = document.getElementById('dynamicSubtitle');
+            const nameElem = document.getElementById('dynamicIslandName');
+            const radarBox = document.getElementById('faceidRadarBox');
+            const overviewCard = document.getElementById('overviewFaceCard');
+
+            resetIconStateIdle();
+
+            if (subTitleElem) subTitleElem.innerText = "Face ID Verified";
+            if (nameElem) nameElem.innerText = detectedName;
+            if (radarBox) radarBox.classList.add('verified');
+            if (overviewCard) overviewCard.classList.add('verified');
+
+            document.querySelectorAll('.valHusky').forEach(el => el.innerText = detectedName);
+
+            if (topWrapper) topWrapper.classList.add('active');
+
+            setTimeout(() => {
+                playApplePaySound();
+                if (topWrapper) topWrapper.classList.add('unlocking');
+            }, 250);
+
+            if (faceIDTimeout) clearTimeout(faceIDTimeout);
+            faceIDTimeout = setTimeout(() => {
+                if (topWrapper) {
+                    topWrapper.classList.remove('unlocking', 'active');
+                }
+                if (radarBox) radarBox.classList.remove('verified');
+                if (overviewCard) overviewCard.classList.remove('verified');
+
+                document.querySelectorAll('.valHusky').forEach(el => el.innerText = "Scanning...");
+
+                // Quay về icon Face ID nguyên bản
+                resetIconStateIdle();
+
+                isFaceIDLocked = false;
+                isUnknownActive = false;
+                if (unknownTimer) { clearTimeout(unknownTimer); unknownTimer = null; }
+            }, 3200);
+        }
+
+        function addFaceIDLog(name, isSuccess = true) {
+            detectionCount++;
+            document.getElementById('totalDetections').innerText = detectionCount;
+
+            const tbody = document.getElementById('faceidLogTableBody');
+            
+            if (tbody.children.length === 1 && tbody.children[0].cells.length === 1) {
+                tbody.innerHTML = '';
+            }
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+
+            const tr = document.createElement('tr');
+            if (isSuccess) {
+                tr.innerHTML = `
+                    <td>${timeStr}</td>
+                    <td><span class="user-tag"><i data-lucide="user" style="width: 12px; height: 12px;"></i> ${name}</span></td>
+                    <td><span style="color: var(--faceid-accent); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i> Verified</span></td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td>${timeStr}</td>
+                    <td><span class="user-tag denied"><i data-lucide="user-x" style="width: 12px; height: 12px;"></i> Not a group member</span></td>
+                    <td><span style="color: #ff3b30; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="x-circle" style="width: 14px; height: 14px;"></i> Access Denied</span></td>
+                `;
+            }
+
+            tbody.insertBefore(tr, tbody.firstChild);
+            lucide.createIcons();
+        }
+
+        function clearFaceIDLogs() {
+            detectionCount = 0;
+            document.getElementById('totalDetections').innerText = '0';
+            const tbody = document.getElementById('faceidLogTableBody');
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 24px;">No face recognition logs recorded yet.</td></tr>`;
+        }
+
+        function updateChart(chart, label, value) {
+            if (chart.data.labels.length >= maxPoints) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+            chart.data.labels.push(label); chart.data.datasets[0].data.push(value); chart.update();
+        }
+    </script>
 </body>
 </html>
