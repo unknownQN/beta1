@@ -602,7 +602,7 @@
                     </div>
                     <div class="card-sm liquid-glass">
                         <div class="card-sm-header"><span>Brightness</span><i data-lucide="sun"></i></div>
-                        <div class="card-sm-body"><span class="card-sm-value valLdr">--</span><span class="card-sm-unit">nits</span></div>
+                        <div class="card-sm-body"><span class="card-sm-value valLdr">--</span><span class="card-sm-unit">lux</span></div>
                     </div>
                     <div class="card-sm liquid-glass">
                         <div class="card-sm-header"><span>Potentiometer</span><i data-lucide="sliders"></i></div>
@@ -756,7 +756,7 @@
                 </div>
                 <div class="card-sm liquid-glass">
                     <div class="card-sm-header"><span>Brightness</span><i data-lucide="sun"></i></div>
-                    <div class="card-sm-body"><span class="card-sm-value valLdr">--</span><span class="card-sm-unit">nits</span></div>
+                    <div class="card-sm-body"><span class="card-sm-value valLdr">--</span><span class="card-sm-unit">lux</span></div>
                 </div>
                 <div class="card-sm liquid-glass">
                     <div class="card-sm-header"><span>Potentiometer</span><i data-lucide="sliders"></i></div>
@@ -821,7 +821,7 @@
                 </div>
                 <div class="member-card liquid-glass special-deputy">
                     <div class="member-avatar deputy-avatar">NK</div>
-                    <div class="member-info"><h4>Nguyen Ba Kiet</h4><p>HCMUTE Students</p></div>
+                    <div class="member-info"><h4>Phan Le Ba Kiet</h4><p>HCMUTE Students</p></div>
                 </div>
                 <div class="member-card liquid-glass"><div class="member-avatar">CP</div><div class="member-info"><h4>Cap Xuan Phuong</h4><p>HCMUTE Students</p></div></div>
                 <div class="member-card liquid-glass"><div class="member-avatar">LH</div><div class="member-info"><h4>Le Thi Ngoc Han</h4><p>HCMUTE Students</p></div></div>
@@ -956,7 +956,7 @@
         const tempChartTab = createChart('tempChartTab', 'Temperature (°C)', '#1d1d1f');
         const humChartTab = createChart('humChartTab', 'Humidity (%)', '#6e6e73');
 
-        function calculateSmartphoneNits(rawInput) {
+        function calculateSmartphonelux(rawInput) {
             if (rawInput === undefined || rawInput === null || isNaN(rawInput)) return null;
             let val = parseFloat(rawInput);
             if (val <= 1023) {
@@ -966,16 +966,16 @@
             return Math.round(val);
         }
 
-        let lastValidData = { temp: null, hum: null, nits: null };
+        let lastValidData = { temp: null, hum: null, lux: null };
 
-        function evaluateHealthCheck(temp, hum, nits) {
+        function evaluateHealthCheck(temp, hum, lux) {
             if (temp !== null && temp !== undefined && !isNaN(temp)) lastValidData.temp = temp;
             if (hum !== null && hum !== undefined && !isNaN(hum)) lastValidData.hum = hum;
-            if (nits !== null && nits !== undefined && !isNaN(nits)) lastValidData.nits = nits;
+            if (lux !== null && lux !== undefined && !isNaN(lux)) lastValidData.lux = lux;
 
             let t = lastValidData.temp;
             let h = lastValidData.hum;
-            let n = lastValidData.nits;
+            let n = lastValidData.lux;
 
             if (t !== null) {
                 document.querySelectorAll('.iconHealthTemp').forEach(iconTemp => {
@@ -1039,21 +1039,21 @@
                     iconLight.className = 'health-icon iconHealthLight'; 
                     statusLight.className = 'health-status statusHealthLight';
 
-                    if (n >= 150 && n <= 350) {
+                    if (n >= 150 && n <= 500) {
                         iconLight.classList.add('bg-good'); 
                         statusLight.classList.add('status-good'); 
                         statusLight.innerText = "Comfortable Light"; 
-                        descLight.innerText = `Brightness of ${n} nits meets standards (150 - 350 nits). Safe for eyes.`;
+                        descLight.innerText = `Brightness of ${n} lux meets standards (150 - 500 lux). Safe for eyes.`;
                     } else if (n < 150) {
                         iconLight.classList.add('bg-warning'); 
                         statusLight.classList.add('status-warning'); 
                         statusLight.innerText = "Too Dim (Unreasonable)"; 
-                        descLight.innerText = `Brightness of ${n} nits is too dim (< 150 nits). Causes eye strain, insufficient light for working.`;
+                        descLight.innerText = `Brightness of ${n} lux is too dim (< 150 lux). Causes eye strain, insufficient light for working.`;
                     } else {
                         iconLight.classList.add('bg-danger'); 
                         statusLight.classList.add('status-danger'); 
                         statusLight.innerText = "Too Bright (Unreasonable)"; 
-                        descLight.innerText = `Brightness of ${n} nits is too glaring (> 350 nits). Causes eye glare, unreasonable for vision.`;
+                        descLight.innerText = `Brightness of ${n} lux is too glaring (> 500 lux). Causes eye glare, unreasonable for vision.`;
                     }
                 });
             }
@@ -1168,14 +1168,14 @@
                     updateChart(humChartOverview, timeLabel, data.hum);
                     updateChart(humChartTab, timeLabel, data.hum);
                 }
-                let calculatedNits = undefined;
+                let calculatedlux = undefined;
                 if (data.ldr !== undefined) {
-                    calculatedNits = calculateSmartphoneNits(data.ldr);
-                    document.querySelectorAll('.valLdr').forEach(el => el.innerText = calculatedNits);
+                    calculatedlux = calculateSmartphonelux(data.ldr);
+                    document.querySelectorAll('.valLdr').forEach(el => el.innerText = calculatedlux);
                 }
                 if (data.pot !== undefined) document.querySelectorAll('.valPot').forEach(el => el.innerText = data.pot);
                 
-                evaluateHealthCheck(data.temp, data.hum, calculatedNits);
+                evaluateHealthCheck(data.temp, data.hum, calculatedlux);
 
                 if (data.husky !== undefined) {
                     let huskyVal = String(data.husky).trim();
